@@ -1,1 +1,1 @@
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -l aentos -i ~/.vagrant.d/insecure_private_key $1 'sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb'
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -l aentos -i /var/cache/lxc/insecure_private_key $1 'sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb'

@@ -16,3 +16,7 @@ fi
 if [ -x lxc-provision ]; then
     cp lxc-provision /usr/local/bin/lxc-provision
 fi
+
+wget --no-check-certificate \
+    'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant' \
+    -O /var/cache/lxc/insecure_private_key
