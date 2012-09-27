@@ -1,4 +1,5 @@
 Berksfile.lock
+Gemfile.lock
 *.swp
 cookbooks
 .chef
