@@ -18,6 +18,7 @@ if [ -x lxc-provision ]; then
     cp lxc-provision /usr/local/bin/lxc-provision
 fi
 
-wget --no-check-certificate \
-    'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant' \
-    -O /var/cache/lxc/insecure_private_key
+if [ -f insecure_private_key ]; then
+    echo -ne "Copy the SSH key to the LXC cache:\t"
+    cp -v insecure_private_key /var/cache/lxc/insecure_private_key
+fi
