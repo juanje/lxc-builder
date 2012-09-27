@@ -14,6 +14,7 @@ if [ -x lxc-aentos ]; then
 fi
 
 if [ -x lxc-provision ]; then
+    mkdir -p /usr/local/bin/
     cp lxc-provision /usr/local/bin/lxc-provision
 fi
 
