@@ -80,6 +80,11 @@ finalize_user()
 
     if [ "$release" = "precise" ]; then
         groups="sudo"
+        # set the sudoers
+        cat <<EOF > $rootfs/etc/sudoers.d/$user
+$user ALL=(ALL) NOPASSWD:ALL
+EOF
+        chmod 0440 $rootfs/etc/sudoers.d/$user
     else
         groups="sudo admin"
     fi
