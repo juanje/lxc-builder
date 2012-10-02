@@ -20,3 +20,9 @@ if [ -x lxc-provision ]; then
     echo -ne "Copy the lxc-provision command to your PATH:\t"
     cp -v lxc-provision /usr/local/bin/lxc-provision
 fi
+
+if [ -x lxc-ssh ]; then
+    mkdir -p /usr/local/bin/
+    echo -ne "Copy the lxc-ssh command to your PATH:\t"
+    cp -v lxc-ssh /usr/local/bin/lxc-ssh
+fi

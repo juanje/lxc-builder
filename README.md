@@ -44,11 +44,11 @@ or (if you have not dnsmasq working with you resolvconf):
 $ lxc-provision 10.0.3.51
 ```
 
-You also can use `lxc-console` or normal ssh connection to work inside the container. To connect via ssh with the container without password you can use a private key copied to `/var/cache/lxc/insecure\_private\_key` for this purpose.
-It can be used by:
+You also can use `lxc-console` or normal ssh connection to work inside the container. To connect via ssh with the container without password you can use a private key copied to `/var/cache/lxc/id\_aentos\_[container-name]` for this purpose.
+There is also a handy command `lxc-ssh` which do the job. Here is how you can use it:
 
 ```
-ssh -l aentos -i /var/cache/lxc/insecure_private_key superproject
+$ lxc-ssh superproject
 ```
 
 In case you need it, the password for the `aentos` user is `aentos`.

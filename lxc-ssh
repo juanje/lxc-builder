@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "You need to pass one parameter: the container's name or IP"
+    exit 1
+fi
+
+name=$1
+
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -l aentos -i /var/cache/lxc/id_aentos_${name} $name
