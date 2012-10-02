@@ -595,8 +595,11 @@ install_key()
 {
     chroot_ssh_dir="${rootfs}/home/aentos/.ssh"
     mkdir $chroot_ssh_dir
-    ssh-keygen -t rsa -N "" -f /var/cache/lxc/id_aentos
-    cp /var/cache/lxc/id_aentos.pub ${chroot_ssh_dir}/authorized_keys
+    id_filename="id_aentos_${name}"
+    [ -f /var/cache/lxc/$id_filename ] && rm -f /var/cache/lxc/$id_filename
+    ssh-keygen -t rsa -N "" -f /var/cache/lxc/$id_filename
+    chown $SUDO_USER /var/cache/lxc/$id_filename
+    cp /var/cache/lxc/${id_filename}.pub ${chroot_ssh_dir}/authorized_keys
     chown -R 1000 $chroot_ssh_dir
     chmod -R go-rwsx $chroot_ssh_dir
 }
