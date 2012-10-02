@@ -20,8 +20,3 @@ if [ -x lxc-provision ]; then
     echo -ne "Copy the lxc-provision command to your PATH:\t"
     cp -v lxc-provision /usr/local/bin/lxc-provision
 fi
-
-if [ -f insecure_private_key ]; then
-    echo -ne "Copy the SSH key to the LXC cache:\t"
-    cp -v insecure_private_key /var/cache/lxc/insecure_private_key
-fi

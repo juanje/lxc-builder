@@ -595,9 +595,8 @@ install_key()
 {
     chroot_ssh_dir="${rootfs}/home/aentos/.ssh"
     mkdir $chroot_ssh_dir
-    wget --no-check-certificate \
-        'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' \
-        -O ${chroot_ssh_dir}/authorized_keys
+    ssh-keygen -t rsa -N "" -f /var/cache/lxc/id_aentos
+    cp /var/cache/lxc/id_aentos.pub ${chroot_ssh_dir}/authorized_keys
     chown -R 1000 $chroot_ssh_dir
     chmod -R go-rwsx $chroot_ssh_dir
 }
