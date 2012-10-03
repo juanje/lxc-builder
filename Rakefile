@@ -1,3 +1,5 @@
+require 'yaml'
+
 def run_quiet(cmd)
   cmd_end = RakeFileUtils.verbose_flag == true ? "" : "> /dev/null 2>&1"
   `#{cmd} #{cmd_end}`
@@ -27,53 +29,7 @@ namespace :update do
 
   desc "Clone cookbooks"
   task :clone => :clean do
-    cookbooks = [
-      {
-        name: 'apt',
-        repo: 'git://github.com/opscode-cookbooks/apt.git',
-        revision: '1.4.4'
-      },
-      {
-        name: 'java',
-        repo: 'git://github.com/opscode-cookbooks/java.git',
-        revision: '1.5.2'
-      },
-      {
-        name: 'openssl',
-        repo: 'git://github.com/opscode-cookbooks/openssl.git',
-        revision: '26fd53d'
-      },
-      {
-        name: 'postgresql',
-        repo: 'git://github.com/opscode-cookbooks/postgresql.git',
-        revision: 'dbf5e44'
-      },
-      {
-        name: 'sudo',
-        repo: 'git://github.com/opscode-cookbooks/sudo.git',
-        revision: '1.2.0'
-      },
-      {
-        name: 'mongodb',
-        repo: 'git://github.com/edelight/chef-mongodb.git',
-        revision: '0.11.0'
-      },
-      {
-        name: 'rvm',
-        repo: 'git://github.com/fnichol/chef-rvm.git',
-        revision: 'v0.9.0'
-      },
-      {
-        name: 'conf',
-        repo: 'git://github.com/juanje/cookbook-conf.git',
-        revision: 'ba2e875'
-      },
-      {
-        name: 'aentos-bootstrap',
-        repo: 'git://github.com/aentos/cookbook-aentos-bootstrap.git',
-        revision: '0.1.0'
-      }
-    ]
+    cookbooks = YAML.load_file("cookbooks.yml")
     puts "Cloning cookbooks..."
     clone_cookbooks cookbooks
     puts "Done."
