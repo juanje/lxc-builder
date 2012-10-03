@@ -93,8 +93,7 @@ task :update => 'update:tarball'
 namespace :install do
   desc "Do I have enough permissions?"
   task :root do
-    user = `whoami`.chomp
-    if user != 'root'
+    if Process.uid != 0
       fail "You must to be root in order to run this task. Try with sudo"
     end
   end
