@@ -89,3 +89,53 @@ end
 
 desc "Obtain cookbooks and update the chef-solo.tar.gz file"
 task :update => 'update:tarball'
+
+namespace :install do
+  desc "Do I have enough permissions?"
+  task :root do
+    user = `whoami`.chomp
+    if user != 'root'
+      fail "You must to be root in order to run this task. Try with sudo"
+    end
+  end
+
+  desc "Copy the cookbooks into the LXC cache"
+  task :tarball => :root do
+    Rake::Task[:update].invoke
+    puts "Copying the tarball to the LXC cache..."
+    cp "chef-solo.tar.gz", "/var/cache/lxc/chef-solo.tar.gz"
+    puts "Done."
+    Rake::Task['update:clean'].execute
+  end
+
+  desc "Copy the Aentos's template to the LXC templates"
+  task :template => :root do
+    puts "Copying the Aentos's template to the LXC templates..."
+    cp "lxc-aentos", "/usr/lib/lxc/templates/lxc-aentos"
+    puts "Done."
+  end
+
+  directory "/usr/local/bin/"
+
+  desc "Copy the lxc-provision command to your PATH"
+  task :provision => [:root, "/usr/local/bin/"] do
+    puts "Copying the lxc-provision command to your PATH..."
+    cp "lxc-provision", "/usr/local/bin/lxc-provision"
+    chmod 0755, "/usr/local/bin/lxc-provision"
+    puts "Done."
+  end
+
+  desc "Copy the lxc-ssh command to your PATH"
+  task :ssh => [:root, "/usr/local/bin/"] do
+    puts "Copying the lxc-ssh command to your PATH..."
+    cp "lxc-ssh", "/usr/local/bin/lxc-ssh"
+    chmod 0755, "/usr/local/bin/lxc-ssh"
+    puts "Done."
+  end
+
+  desc "Run all install tasks"
+  task :all => [:tarball, :template, :provision, :ssh]
+end
+
+desc "Install LXC files"
+task :install => 'install:all'
