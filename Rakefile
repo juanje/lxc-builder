@@ -94,3 +94,5 @@ end
 
 desc "Install LXC files"
 task :install => 'install:all'
+
+task :default => :install
