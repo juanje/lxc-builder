@@ -11,9 +11,25 @@ The template is functional, but still need some love. This also depends on the C
 Install
 =======
 
-There is a very poor script with place all you need in place called `install.sh`.
+To install the templates and scripts you need to have installed in a Ubuntu/Debian box with the following dependencies:
 
-You need to have LXC installed on a Ubuntu box (preferably Ubuntu Precise) and then run this script as a `root`. This will copy the template to `/usr/lib/lxc/templates/lxc-aentos` to be used by `lxc-create`, the tarball with the cookbooks to `/var/cache/lxc/chef-solo.tar.gz` and a simple command to make the provisioning inside the container to `/usr/local/bin/lxc-provision`.
+* `lxc`
+* `rake` (it doesn't matter if vía system packages or gems)
+
+Now you need to run:
+
+```
+$ sudo rake
+```
+
+NOTE: It's important to run the `rake` with `sudo` or as a root user.
+
+This will download the cookbooks, will create a tarball to be used by the `chef-solo` and will copy the tarball and the script to your system.
+You can see the rest of the rake tasks by doing:
+
+```
+$ rake -T
+```
 
 Usage
 =====
@@ -44,7 +60,7 @@ or (if you have not dnsmasq working with you resolvconf):
 $ lxc-provision 10.0.3.51
 ```
 
-You also can use `lxc-console` or normal ssh connection to work inside the container. To connect via ssh with the container without password you can use a private key copied to `/var/cache/lxc/id\_aentos\_[container-name]` for this purpose.
+You also can use `lxc-console` or normal ssh connection to work inside the container. To connect via ssh with the container without password you can use a private key copied to `/var/cache/lxc/id_aentos_[container-name]` for this purpose.
 There is also a handy command `lxc-ssh` which do the job. Here is how you can use it:
 
 ```
