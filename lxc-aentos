@@ -6,9 +6,11 @@
 # This script consolidates and extends the existing lxc ubuntu scripts
 #
 
+# Copyright © 2012 Aentos
 # Copyright © 2011 Serge Hallyn <serge.hallyn@canonical.com>
 # Copyright © 2010 Wilhelm Meier
 # Author: Wilhelm Meier <wilhelm.meier@fh-kl.de>
+# Author: Juanje Ojeda <juanje.ojeda@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2, as
