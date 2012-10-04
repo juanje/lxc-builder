@@ -53,3 +53,24 @@ $ lxc-ssh superproject
 
 In case you need it, the password for the `aentos` user is `aentos`.
 
+
+License and Author
+==================
+
+The content of this repo but the LXC template (`lxc-aentos`), which is based in another one with a GPL-v2 license and should be shared under the same license, is released under the following license and credits:
+
+Author:: Juanje Ojeda (<juanje.ojeda@gmail.com>)
+
+Copyright:: 2012, Aentos
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
