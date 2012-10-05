@@ -1,10 +1,47 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-    echo "You need to pass one parameter: the container's name or IP"
-    exit 1
+usage()
+{
+    program=$(basename $0)
+    cat <<EOF
+Usage:
+    $program [-h] [-n | --name <name>] [-- <chef-solo parameters>]
+
+Options:
+    -h, --help                 Show this help
+    -n, --name <name>          LXC container's name
+    -- <chef-solo parameters>  Any parameters to pass to the chef-solo
+                               (e.g. '-l debug')
+
+EOF
+}
+
+while [ "$#" -gt 0 ]
+do
+  case $1 in
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    -n|--name)
+        name=$2
+        shift 2
+        ;;
+    --)
+        params=$@
+        break
+        ;;
+    *)
+        break
+        ;;
+  esac
+done
+
+if [ -z $name ] || [ ! -d /var/lib/lxc/${name} ]; then
+  echo "You need to pass a valid name of a container"
+  usage
+  exit 1
 fi
 
-name=$1
+lxc-ssh -n $name -c "sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb $params"
 
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -l aentos -i /var/cache/lxc/id_aentos_${name} $name 'sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb'
