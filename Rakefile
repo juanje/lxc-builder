@@ -63,14 +63,15 @@ namespace :install do
     Rake::Task['update:clean'].execute
   end
 
-  desc "Copy the Aentos's template to the LXC templates"
-  task :template => :root do
-    puts "Copying the Aentos's template to the LXC templates..."
-    cp "lxc-aentos", "/usr/lib/lxc/templates/lxc-aentos"
+  directory "/usr/local/bin/"
+
+  desc "Copy the lxc-build-project script to your PATH"
+  task :builder => [:root, "/usr/local/bin/"] do
+    puts "Copying the lxc-build-project script to your PATH..."
+    cp "lxc-build-project", "/usr/local/bin/lxc-build-project"
+    chmod 0755, "/usr/local/bin/lxc-build-project"
     puts "Done."
   end
-
-  directory "/usr/local/bin/"
 
   desc "Copy the lxc-provision command to your PATH"
   task :provision => [:root, "/usr/local/bin/"] do

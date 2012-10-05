@@ -1,0 +1,220 @@
+#!/bin/bash
+
+#
+# This script call lxc-create to create a LXC container and then prepare the
+# container to use manage with Chef.
+#
+
+# Copyright (c) 2012 Aentos
+# Author: Juanje Ojeda <juanje.ojeda@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Helpers
+
+fail()
+{
+  echo "Failed to perfome: $@"
+  exit 1
+}
+
+run_command()
+{
+  command="$@"
+  if [ $verbose -eq 1 ]; then
+    echo "Running: ${command}" | tee -a ${logfile}
+  else
+    echo "Running: ${command}" >> ${logfile}
+  fi
+  eval ${command} > ${logfile} 2>&1 || fail "${command}"
+}
+
+# Add a host path to the list to be binding inside the container
+bind_path()
+{
+  host_path=$1
+  guest_path=$2
+
+  echo "${host_path} ${rootfs}/${guest_path} none bind 0 0" >> $path/fstab
+}
+
+
+# Create the user or move if s/he already exists
+ensure_user()
+{
+  if [ "$distro" = "ubuntu" ]; then
+    groups="sudo"
+    # set the sudoers
+    cat <<EOF > $rootfs/etc/sudoers.d/$user
+$user ALL=(ALL) NOPASSWD:ALL
+EOF
+    run_command "chmod 0440 $rootfs/etc/sudoers.d/$user"
+  else
+    groups="sudo admin"
+  fi
+
+  if [ $distro = "debian" ]; then
+    run_command "chroot $rootfs useradd --create-home -s /bin/bash $user"
+  else
+    run_command "chroot $rootfs usermod --login $user --home /home/$user --move-home --uid 1000 ubuntu"
+  fi
+  echo "${user}:${user}" | chroot $rootfs chpasswd
+
+  for group in $groups; do
+    run_command "chroot $rootfs groupadd --system $group || true"
+    run_command "chroot $rootfs adduser ${user} $group || true"
+  done
+
+  if [ -f ${lxc_cache}/chef-solo.tar.gz ]; then
+    run_command "mkdir -p $rootfs/var/chef-solo"
+    run_command "cp ${lxc_cache}/chef-solo.tar.gz $rootfs/var/chef-solo/"
+  fi
+
+  if [ ! -d ${rootfs}/etc/chef ]; then
+    run_command "mkdir -p $rootfs/etc/chef"
+  fi
+
+  # add solo.rb
+  cat <<EOF > $rootfs/etc/chef/solo.rb
+file_cache_path "/var/chef-solo"
+cookbook_path "/var/chef-solo/cookbooks/"
+json_attribs "/etc/chef/solo.json"
+recipe_url "/var/chef-solo/chef-solo.tar.gz"
+EOF
+  # add solo.json
+  cat <<EOF > $rootfs/etc/chef/solo.json
+{
+  "run_list": [ "recipe[aentos-bootstrap]" ]
+}
+EOF
+  echo $user > $lxc_containers/$name/user
+
+}
+
+install_chef()
+{
+  run_command "chroot $rootfs apt-get --force-yes -y install wget"
+  run_command "wget -O $rootfs/tmp/install.sh http://opscode.com/chef/install.sh"
+  run_command "chroot $rootfs /bin/bash /tmp/install.sh"
+}
+
+# Generate and inject the SSH key into the container
+install_key()
+{
+  chroot_ssh_dir="${rootfs}/home/${user}/.ssh"
+  [ -d $chroot_ssh_dir ] && rm -fr $chroot_ssh_dir
+
+  run_command "mkdir $chroot_ssh_dir"
+
+  id_filename="${lxc_cache}/id_project_${name}"
+  [ -f $id_filename ] && rm -f $id_filename
+
+  run_command "ssh-keygen -t rsa -N '' -f $id_filename"
+  run_command "chown $SUDO_USER $id_filename"
+  run_command "cp ${id_filename}.pub ${chroot_ssh_dir}/authorized_keys"
+  run_command "chroot $rootfs chown -R $user /home/${user}/.ssh"
+  run_command "chmod -R go-rwsx $chroot_ssh_dir"
+}
+
+create_container()
+{
+  run_command "lxc-create -n ${name} -t ${distro} -- ${params}"
+}
+
+usage()
+{
+  cat <<EOF
+Usage:
+    $(basename $0) [-h|--help] [-n | --name <name>] [-u|--user <user>]
+    [-D|--distro <distro>] [-d|--debug] [-v|--verbose]
+    [-- <template params>]
+
+Options:
+    -h, --help             Show this help
+    -n, --name <name>      LXC container's name. This parameter is required.
+    -u, --user <user>      The user to have created inside the container
+    -D, --distro <distro>  'debian' or 'ubuntu'
+    -d, --debug            Activate the debuging mode for the script
+    -v, --verbose          Show what is going on during the execution
+    -- <template params>   Extra parameters to pass to the lxc-create command
+
+EOF
+}
+
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This script should be run as 'root'"
+  exit 1
+fi
+
+options=$(getopt -o hu:p:n:D:d -l help,user:,path:,name:,distro:,debug -- "$@")
+if [ $? -ne 0 ]; then
+  usage
+  exit 1
+fi
+eval set -- "$options"
+
+debug=0
+verbose=1
+distro="ubuntu"
+lxc_containers="/var/lib/lxc"
+lxc_cache="/var/cache/lxc"
+logfile="/var/log/lxc_$(date +%Y%m%d%H%M).log"
+while true
+do
+  case "$1" in
+  -h|--help)    usage && exit 0;;
+  -u|--user)    user=$2; shift 2;;
+  -p|--path)    path=$2; shift 2;;
+  -n|--name)    name=$2; shift 2;;
+  -D|--distro)  distro=$2; shift 2;;
+  -d|--debug)   debug=1; shift 1;;
+  -v|--verbose) verbose=1; shift 1;;
+  --)  shift 1; params="$@"; break ;;
+  *)   break ;;
+  esac
+done
+
+if [ $debug -eq 1 ]; then
+  set -x
+fi
+
+if [ -z "$name" ]; then
+  echo "'name' parameter is required"
+  exit 1
+fi
+
+if [ -z "$path" ]; then
+  path="${lxc_containers}/${name}"
+fi
+
+if [ $distro != "ubuntu" ] && [ $distro != "debian" ]; then
+  echo "'distro' parameter must be 'debian' or 'ubuntu'"
+  exit 1
+fi
+
+rootfs=$path/rootfs
+
+if [ -z "$user" ]; then
+  user="ubuntu"
+fi
+
+create_container
+
+ensure_user
+
+install_chef
+
+install_key
+
+echo "Project ${name} has been succefully created"
