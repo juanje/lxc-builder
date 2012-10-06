@@ -3,6 +3,7 @@ require 'yaml'
 DESTDIR = ENV["DESTDIR"] || ""
 BINDIR = ENV["BINDIR"] || "/usr/local/bin"
 TARGETDIR = ENV["TARGETDIR"] || ".target"
+CONTAINER = ENV["CONTAINER"] || ""
 
 def run_quiet(cmd)
   cmd_end = RakeFileUtils.verbose_flag == true ? "" : "> /dev/null 2>&1"
@@ -45,6 +46,19 @@ namespace :install do
   task :tarball => :update do
     mkdir_p "#{DESTDIR}/var/cache/lxc/"
     install "#{TARGETDIR}/chef-solo.tar.gz", "#{DESTDIR}/var/cache/lxc", mode: 0644
+  end
+
+  desc "Copy the cookbooks into a specific container"
+  task :tarball_to_container do
+    tarball_path = "#{DESTDIR}/var/lib/lxc/#{CONTAINER}/rootfs/var/chef-solo/chef-solo.tar.gz"
+    if ! File.exists? tarball_path
+      fail "It seems like the container '#{CONTAINER}' doesn't exist."
+    end
+    Rake::Task[:update].invoke
+    puts "Copying the tarball to the LXC cache..."
+    install "#{TARGETDIR}/chef-solo.tar.gz", tarball_path, mode: 0644
+    puts "Done."
+    Rake::Task['update:clean'].execute
   end
 
   desc "Copy the lxc-ssh command to your PATH"
