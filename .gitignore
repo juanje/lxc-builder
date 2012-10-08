@@ -1,6 +1,5 @@
 Berksfile.lock
 Gemfile.lock
 *.swp
-cookbooks
 .chef
-chef-solo.tar.gz
+.target
