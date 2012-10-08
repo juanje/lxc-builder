@@ -129,6 +129,17 @@ install_key()
 create_container()
 {
   run_command "lxc-create -n ${name} -t ${distro} -- ${params}"
+  if [ $distro = debian ]; then
+    run_command "sed -i 's/lxc.utsname.*/lxc.utsname = $name/g' $path/config"
+    nics=`grep -e '^lxc\.network\.type[ \t]*=[ \t]*veth' $path/config | wc -l`
+    if [ $nics -eq 1 ]; then
+      grep -q "^lxc.network.hwaddr" $path/config || cat <<EOF >> $path/config
+lxc.network.hwaddr = 00:16:3e:$(openssl rand -hex 3| sed 's/\(..\)/\1:/g; s/.$//')
+EOF
+    fi
+    run_command "echo '127.0.0.1       $name' >> $rootfs/etc/hosts"
+    run_command "chroot $rootfs apt-get --force-yes -y install sudo"
+  fi
 }
 
 usage()
