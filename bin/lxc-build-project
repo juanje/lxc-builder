@@ -52,16 +52,12 @@ bind_path()
 # Create the user or move if s/he already exists
 ensure_user()
 {
-  if [ "$distro" = "ubuntu" ]; then
-    groups="sudo"
-    # set the sudoers
-    cat <<EOF > $rootfs/etc/sudoers.d/$user
+  groups="sudo"
+  # set the sudoers
+  cat <<EOF > $rootfs/etc/sudoers.d/$user
 $user ALL=(ALL) NOPASSWD:ALL
 EOF
-    run_command "chmod 0440 $rootfs/etc/sudoers.d/$user"
-  else
-    groups="sudo admin"
-  fi
+  run_command "chmod 0440 $rootfs/etc/sudoers.d/$user"
 
   if [ $distro = "debian" ]; then
     run_command "chroot $rootfs useradd --create-home -s /bin/bash $user"
@@ -129,6 +125,17 @@ install_key()
 create_container()
 {
   run_command "lxc-create -n ${name} -t ${distro} -- ${params}"
+  if [ $distro = debian ]; then
+    run_command "sed -i 's/lxc.utsname.*/lxc.utsname = $name/g' $path/config"
+    nics=`grep -e '^lxc\.network\.type[ \t]*=[ \t]*veth' $path/config | wc -l`
+    if [ $nics -eq 1 ]; then
+      grep -q "^lxc.network.hwaddr" $path/config || cat <<EOF >> $path/config
+lxc.network.hwaddr = 00:16:3e:$(openssl rand -hex 3| sed 's/\(..\)/\1:/g; s/.$//')
+EOF
+    fi
+    run_command "echo '127.0.0.1       $name' >> $rootfs/etc/hosts"
+    run_command "chroot $rootfs apt-get --force-yes -y install sudo"
+  fi
 }
 
 usage()
