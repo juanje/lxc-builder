@@ -52,16 +52,12 @@ bind_path()
 # Create the user or move if s/he already exists
 ensure_user()
 {
-  if [ "$distro" = "ubuntu" ]; then
-    groups="sudo"
-    # set the sudoers
-    cat <<EOF > $rootfs/etc/sudoers.d/$user
+  groups="sudo"
+  # set the sudoers
+  cat <<EOF > $rootfs/etc/sudoers.d/$user
 $user ALL=(ALL) NOPASSWD:ALL
 EOF
-    run_command "chmod 0440 $rootfs/etc/sudoers.d/$user"
-  else
-    groups="sudo admin"
-  fi
+  run_command "chmod 0440 $rootfs/etc/sudoers.d/$user"
 
   if [ $distro = "debian" ]; then
     run_command "chroot $rootfs useradd --create-home -s /bin/bash $user"
