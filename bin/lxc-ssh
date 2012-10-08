@@ -44,7 +44,7 @@ fi
 
 username=$(< /var/lib/lxc/${name}/user)
 
-( sudo lxc-info -n $name -s | grep -q RUNNING ) || sudo lxc-start -n $name -d ; sleep 3
+( sudo lxc-info -n $name -s | grep -q RUNNING ) || ( sudo lxc-start -n $name -d ; sleep 3 )
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -l $username -i /var/cache/lxc/id_project_${name} $name "$command"
 
