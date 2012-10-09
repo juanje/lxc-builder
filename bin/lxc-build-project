@@ -86,7 +86,7 @@ file_cache_path "/var/chef-solo"
 cookbook_path "/var/chef-solo/cookbooks/"
 json_attribs "/etc/chef/solo.json"
 EOF
-  if [ -n $cookbooks_file ]; then
+  if [ -n "$cookbooks_file" ]; then
     ruby -ryaml -e "YAML.load(File.read('${cookbooks_file}')).each {|d| d.each {|k,v| print \"#{v}\t\" }; puts }" | \
     while read cb_name cb_repo cb_ver ; do
       repo_dir="$rootfs/var/chef-solo/cookbooks/$cb_name"
@@ -101,7 +101,7 @@ EOF
   fi
 
   # add solo.json
-  if [ -n $json_file ]; then
+  if [ -n "$json_file" ]; then
     run_command "cp $json_file $rootfs/etc/chef/solo.json"
   else
     cat <<EOF > $rootfs/etc/chef/solo.json
