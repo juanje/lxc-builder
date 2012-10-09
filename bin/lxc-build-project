@@ -71,13 +71,13 @@ EOF
     run_command "chroot $rootfs adduser ${user} $group || true"
   done
 
-  if [ -f ${lxc_cache}/chef-solo.tar.gz ]; then
-    run_command "mkdir -p $rootfs/var/chef-solo"
-    run_command "cp ${lxc_cache}/chef-solo.tar.gz $rootfs/var/chef-solo/"
-  fi
 
   if [ ! -d ${rootfs}/etc/chef ]; then
     run_command "mkdir -p $rootfs/etc/chef"
+  fi
+
+  if [ ! -d ${rootfs}/var/chef-solo ]; then
+    run_command "mkdir -p $rootfs/var/chef-solo"
   fi
 
   # add solo.rb
@@ -85,14 +85,31 @@ EOF
 file_cache_path "/var/chef-solo"
 cookbook_path "/var/chef-solo/cookbooks/"
 json_attribs "/etc/chef/solo.json"
+EOF
+  if [ -n "$cookbooks_file" ]; then
+    ruby -ryaml -e "YAML.load(File.read('${cookbooks_file}')).each {|d| d.each {|k,v| print \"#{v}\t\" }; puts }" | \
+    while read cb_name cb_repo cb_ver ; do
+      repo_dir="$rootfs/var/chef-solo/cookbooks/$cb_name"
+      run_command "git clone $cb_repo $repo_dir"
+      run_command "cd $repo_dir ; git reset -q --hard $cb_ver ; cd -"
+    done
+  else
+    run_command "cp ${lxc_cache}/chef-solo.tar.gz $rootfs/var/chef-solo/"
+  cat <<EOF >> $rootfs/etc/chef/solo.rb
 recipe_url "/var/chef-solo/chef-solo.tar.gz"
 EOF
+  fi
+
   # add solo.json
-  cat <<EOF > $rootfs/etc/chef/solo.json
+  if [ -n "$json_file" ]; then
+    run_command "cp $json_file $rootfs/etc/chef/solo.json"
+  else
+    cat <<EOF > $rootfs/etc/chef/solo.json
 {
   "run_list": [ "recipe[aentos-bootstrap]" ]
 }
 EOF
+  fi
   echo $user > $lxc_containers/$name/user
 
 }
@@ -144,6 +161,7 @@ usage()
 Usage:
     $(basename $0) [-h|--help] [-n | --name <name>] [-u|--user <user>]
     [-D|--distro <distro>] [-d|--debug] [-v|--verbose]
+    [-j|--json-file <file>] [-c|--cookbooks-file <file>]
     [-- <template params>]
 
 Options:
@@ -151,6 +169,9 @@ Options:
     -n, --name <name>      LXC container's name. This parameter is required.
     -u, --user <user>      The user to have created inside the container
     -D, --distro <distro>  'debian' or 'ubuntu'
+    -j, --json-file <file> A local 'solo.json' file to install into the container
+    -c, --cookbooks-file <file>  A local 'cookbooks.yml' to install the cookbooks
+                           inside the container
     -d, --debug            Activate the debuging mode for the script
     -v, --verbose          Show what is going on during the execution
     -- <template params>   Extra parameters to pass to the lxc-create command
@@ -164,7 +185,7 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-options=$(getopt -o hu:p:n:D:d -l help,user:,path:,name:,distro:,debug -- "$@")
+options=$(getopt -o hu:p:n:D:j:c:d -l help,user:,path:,name:,distro:,json-file:,cookbooks-file:,debug -- "$@")
 if [ $? -ne 0 ]; then
   usage
   exit 1
@@ -180,14 +201,16 @@ logfile="/var/log/lxc_$(date +%Y%m%d%H%M).log"
 while true
 do
   case "$1" in
-  -h|--help)    usage && exit 0;;
-  -u|--user)    user=$2; shift 2;;
-  -p|--path)    path=$2; shift 2;;
-  -n|--name)    name=$2; shift 2;;
-  -D|--distro)  distro=$2; shift 2;;
-  -d|--debug)   debug=1; shift 1;;
-  -v|--verbose) verbose=1; shift 1;;
-  --)  shift 1; params="$@"; break ;;
+  -h|--help)       usage && exit 0;;
+  -u|--user)       user=$2; shift 2;;
+  -p|--path)       path=$2; shift 2;;
+  -n|--name)       name=$2; shift 2;;
+  -D|--distro)     distro=$2; shift 2;;
+  -j|--json-file)  json_file=$2; shift 2;;
+  -c|--cookbooks-file)  cookbooks_file=$2; shift 2;;
+  -d|--debug)      debug=1; shift 1;;
+  -v|--verbose)    verbose=1; shift 1;;
+  --)  shift 1;    params="$@"; break ;;
   *)   break ;;
   esac
 done
