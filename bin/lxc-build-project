@@ -88,11 +88,15 @@ json_attribs "/etc/chef/solo.json"
 recipe_url "/var/chef-solo/chef-solo.tar.gz"
 EOF
   # add solo.json
-  cat <<EOF > $rootfs/etc/chef/solo.json
+  if [ -n $json_file ]; then
+    run_command "cp $json_file $rootfs/etc/chef/solo.json"
+  else
+    cat <<EOF > $rootfs/etc/chef/solo.json
 {
   "run_list": [ "recipe[aentos-bootstrap]" ]
 }
 EOF
+  fi
   echo $user > $lxc_containers/$name/user
 
 }
@@ -144,6 +148,7 @@ usage()
 Usage:
     $(basename $0) [-h|--help] [-n | --name <name>] [-u|--user <user>]
     [-D|--distro <distro>] [-d|--debug] [-v|--verbose]
+    [-j|--json-file <file>]
     [-- <template params>]
 
 Options:
@@ -151,6 +156,7 @@ Options:
     -n, --name <name>      LXC container's name. This parameter is required.
     -u, --user <user>      The user to have created inside the container
     -D, --distro <distro>  'debian' or 'ubuntu'
+    -j, --json-file <file> A local 'solo.json' file to install into the container
     -d, --debug            Activate the debuging mode for the script
     -v, --verbose          Show what is going on during the execution
     -- <template params>   Extra parameters to pass to the lxc-create command
@@ -164,7 +170,7 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-options=$(getopt -o hu:p:n:D:d -l help,user:,path:,name:,distro:,debug -- "$@")
+options=$(getopt -o hu:p:n:D:j:d -l help,user:,path:,name:,distro:,json-file:,debug -- "$@")
 if [ $? -ne 0 ]; then
   usage
   exit 1
@@ -180,14 +186,15 @@ logfile="/var/log/lxc_$(date +%Y%m%d%H%M).log"
 while true
 do
   case "$1" in
-  -h|--help)    usage && exit 0;;
-  -u|--user)    user=$2; shift 2;;
-  -p|--path)    path=$2; shift 2;;
-  -n|--name)    name=$2; shift 2;;
-  -D|--distro)  distro=$2; shift 2;;
-  -d|--debug)   debug=1; shift 1;;
-  -v|--verbose) verbose=1; shift 1;;
-  --)  shift 1; params="$@"; break ;;
+  -h|--help)       usage && exit 0;;
+  -u|--user)       user=$2; shift 2;;
+  -p|--path)       path=$2; shift 2;;
+  -n|--name)       name=$2; shift 2;;
+  -D|--distro)     distro=$2; shift 2;;
+  -j|--json-file)  json_file=$2; shift 2;;
+  -d|--debug)      debug=1; shift 1;;
+  -v|--verbose)    verbose=1; shift 1;;
+  --)  shift 1;    params="$@"; break ;;
   *)   break ;;
   esac
 done
