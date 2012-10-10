@@ -1,28 +1,28 @@
 ---
 - :name: apt
-  :repo: git://github.com/opscode-cookbooks/apt.git
+  :repo: site
   :revision: 1.4.4
 - :name: java
-  :repo: git://github.com/opscode-cookbooks/java.git
+  :repo: site
   :revision: 1.5.2
 - :name: openssl
-  :repo: git://github.com/opscode-cookbooks/openssl.git
-  :revision: 26fd53d
+  :repo: site
+  :revision: 1.0.0
 - :name: postgresql
-  :repo: git://github.com/opscode-cookbooks/postgresql.git
-  :revision: dbf5e44
+  :repo: site
+  :revision: 1.0.0
 - :name: sudo
-  :repo: git://github.com/opscode-cookbooks/sudo.git
+  :repo: site
   :revision: 1.2.0
 - :name: mongodb
-  :repo: git://github.com/edelight/chef-mongodb.git
-  :revision: 57ad84d
+  :repo: site
+  :revision: 0.11.0
 - :name: rvm
   :repo: git://github.com/fnichol/chef-rvm.git
   :revision: v0.9.0
 - :name: conf
-  :repo: git://github.com/juanje/cookbook-conf.git
-  :revision: ba2e875
+  :repo: site
+  :revision: 0.1.0
 - :name: aentos-bootstrap
   :repo: git://github.com/aentos/cookbook-aentos-bootstrap.git
   :revision: 0.1.0
