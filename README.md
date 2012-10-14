@@ -12,22 +12,26 @@ Install
 To install the scripts you need to have installed in a Ubuntu/Debian box with the following dependencies:
 
 * `lxc`
-* `rake` (it doesn't matter if vía system packages or gems)
+* `make`
 
 Now you need to run:
 
 ```
-$ sudo rake
+$ sudo make
 ```
 
-NOTE: It's important to run the `rake` with `sudo` or as a root user.
+It will install the scripts to `/usr/local/bin/`.
 
-This will download the cookbooks, will create a tarball to be used by the `chef-solo` and will copy the tarball and the script to your system.
-You can see the rest of the rake tasks by doing:
+NOTE: It's important to run the `make` with `sudo` or as a root user.
+
+You also can especify the `DESTDIR` and the `prefix` variables to the `make` command:
 
 ```
-$ rake -T
+$ make DESTDIR=~ prefix=
 ```
+
+It will install the scripts to `/home/$USER/bin`.
+
 
 Usage
 =====
