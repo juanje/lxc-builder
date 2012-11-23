@@ -101,7 +101,7 @@ EOF
       fi
     done
   else
-    run_command "cp ${lxc_cache}/chef-solo.tar.gz $rootfs/var/chef-solo/"
+    run_command "cp $cookbooks_tarball $rootfs/var/chef-solo/"
   cat <<EOF >> $rootfs/etc/chef/solo.rb
 recipe_url "/var/chef-solo/chef-solo.tar.gz"
 EOF
@@ -199,6 +199,7 @@ verbose=1
 distro="ubuntu"
 lxc_containers="/var/lib/lxc"
 lxc_cache="/var/cache/lxc"
+cookbooks_tarball="${lxc_cache}/chef-solo.tar.gz"
 logfile="/var/log/lxc_$(date +%Y%m%d%H%M).log"
 while true
 do
@@ -228,6 +229,12 @@ fi
 
 if [ -z "$name" ]; then
   echo "'name' parameter is required"
+  exit 1
+fi
+
+if [ -z "$cookbooks_file" ] && [ ! -f $cookbooks_tarball ]; then
+  echo "A cookbooks yaml file or $cookbooks_tarball must be provided"
+  usage
   exit 1
 fi
 
