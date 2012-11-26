@@ -31,12 +31,16 @@ fail()
 run_command()
 {
   command="$@"
-  if [ $verbose -eq 1 ]; then
-    echo "Running: ${command}" | tee -a ${logfile}
+  if [ -n "$TEST" ];then
+    echo $command
   else
-    echo "Running: ${command}" >> ${logfile}
+    if [ $verbose -eq 1 ]; then
+      echo "Running: ${command}" | tee -a ${logfile}
+    else
+      echo "Running: ${command}" >> ${logfile}
+    fi
+      eval ${command} > ${logfile} 2>&1 || fail "${command}"
   fi
-  eval ${command} > ${logfile} 2>&1 || fail "${command}"
 }
 
 # Add a host path to the list to be binding inside the container
@@ -148,7 +152,8 @@ install_key()
 
 create_container()
 {
-  run_command "lxc-create -n ${name} -t ${distro} -- ${params}"
+  run_command "lxc-create -n ${name} -t ${distro} ${params}"
+  [ -n "$TEST" ] && exit
   if [ $distro = debian ]; then
     run_command "sed -i 's/lxc.utsname.*/lxc.utsname = $name/g' $path/config"
     nics=`grep -e '^lxc\.network\.type[ \t]*=[ \t]*veth' $path/config | wc -l`
@@ -217,7 +222,7 @@ do
   esac
 done
 
-if [ "$(id -u)" != "0" ]; then
+if [ "$(id -u)" != "0" ] && [ -z "$TEST" ]; then
   echo "This script should be run as 'root'"
   exit 1
 fi
