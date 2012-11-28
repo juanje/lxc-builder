@@ -31,12 +31,16 @@ fail()
 run_command()
 {
   command="$@"
-  if [ $verbose -eq 1 ]; then
-    echo "Running: ${command}" | tee -a ${logfile}
+  if [ -n "$TEST" ];then
+    echo $command
   else
-    echo "Running: ${command}" >> ${logfile}
+    if [ $verbose -eq 1 ]; then
+      echo "Running: ${command}" | tee -a ${logfile}
+    else
+      echo "Running: ${command}" >> ${logfile}
+    fi
+      eval ${command} > ${logfile} 2>&1 || fail "${command}"
   fi
-  eval ${command} > ${logfile} 2>&1 || fail "${command}"
 }
 
 # Add a host path to the list to be binding inside the container
@@ -148,7 +152,8 @@ install_key()
 
 create_container()
 {
-  run_command "lxc-create -n ${name} -t ${distro} -- ${params}"
+  run_command "lxc-create -n ${name} -t ${distro} ${params}"
+  [ -n "$TEST" ] && exit
   if [ $distro = debian ]; then
     run_command "sed -i 's/lxc.utsname.*/lxc.utsname = $name/g' $path/config"
     nics=`grep -e '^lxc\.network\.type[ \t]*=[ \t]*veth' $path/config | wc -l`
@@ -160,6 +165,54 @@ EOF
     run_command "echo '127.0.0.1       $name' >> $rootfs/etc/hosts"
     run_command "chroot $rootfs apt-get --force-yes -y install sudo"
   fi
+}
+
+lvm_params()
+{
+  lvmopts=""
+  while [ $# -ne 0 ]; do
+    case "$1" in
+      --lvname|--vgname|--fstype|--fssize)
+        if [ ! $2 ] || [[ "$2" =~ "-" ]];then
+          return 1
+        fi
+        lvmopts="$lvmopts $1 $2"; shift 2;;
+      *)
+        shift 1;;
+    esac
+  done
+  echo $lvmopts
+}
+
+extra_params()
+{
+  while [ $# -ne 0 ]; do
+    case "$1" in
+      -B)
+        shift 1;
+        case "$1" in
+          dir)
+            if [ ! $3 ] || [[ "$3" =~ "-" ]];then
+              return 1
+            fi
+            fsopts="-B dir --dir $3"; shift 2;;
+          lvm)
+            lvmopts=$(lvm_params $@) || return 1
+            num_of_params=$(echo $lvmopts | wc -w)
+            fsopts="-B lvm $lvmopts"
+            [ $num_of_params -ne 0 ] && shift $num_of_params;;
+          [a-z]*)
+            fsopts="-B $1";;
+          -*)
+            params="$params $1"
+        esac
+        shift 1;;
+      *)
+        params="$params $1"
+        shift 1;;
+    esac
+  done
+  echo "$fsopts -- $params"
 }
 
 usage()
@@ -213,12 +266,19 @@ do
   -c|--cookbooks-file)  cookbooks_file=$2; shift 2;;
   -d|--debug)      debug=1; shift 1;;
   -v|--verbose)    verbose=1; shift 1;;
-  --)  shift 1;    params="$@"; break ;;
+  --)
+     shift 1
+     params=$(extra_params "$@")
+     if [ $? -eq 1 ];then
+       lxc-create -t $distro -h
+       exit 1
+     fi
+     break;;
   *)   break ;;
   esac
 done
 
-if [ "$(id -u)" != "0" ]; then
+if [ "$(id -u)" != "0" ] && [ -z "$TEST" ]; then
   echo "This script should be run as 'root'"
   exit 1
 fi
