@@ -43,5 +43,5 @@ if [ -z $name ] || [ ! -d /var/lib/lxc/${name} ]; then
   exit 1
 fi
 
-lxc-ssh -n $name -c "sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb $params"
+lxc-ssh -n $name -c "LC_ALL=C sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb $params"
 
