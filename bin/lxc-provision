@@ -28,6 +28,7 @@ do
         shift 2
         ;;
     --)
+        shift 1
         params=$@
         break
         ;;
