@@ -48,17 +48,26 @@ If you are going to use the boostrap cookbook, **it's very important that the us
 
 The `<distro>` could be either `debian` or `ubuntu`. The default option is `debian`.
 
+To create a LXC project it's enough to run (being `superproject` the name of the new project):
+
+```
+$ sudo lxc-build-project -n superproject
+```
+
 You can also pass some parameters to the `lxc-create` after `--`, like the IP the container should have:
 
 ```
-$ sudo lxc-build-project -n superproject -u aentos -- -i 10.0.3.51
+$ sudo lxc-build-project -n superproject -- -i 10.0.3.51 -B lvm
 ```
 
 After you create the container you need to provision it by doing:
 
 ```
-$ lxc-provision -n superproject
+$ sudo lxc-provision -n superproject -b /mnt/disk1/code/Berksfile
 ```
+
+You will need a `Berksfile` file with the cookbooks for the project you want to bootstrap. A example is provider in this repo.
+To know more about the `Berksfile`'s format please visit [the Berkshelf's site](http://berkshelf.com).
 
 You also can use `lxc-console` or normal ssh connection to work inside the container. To connect via ssh with the container without password you can use a private key copied to `/var/cache/lxc/id_project_[container-name]` for this purpose.
 There is also a handy command `lxc-ssh` which do the job. Here is how you can use it:
@@ -67,7 +76,7 @@ There is also a handy command `lxc-ssh` which do the job. Here is how you can us
 $ lxc-ssh -n superproject
 ```
 
-In case you need it, the password for the `aentos` user is `aentos`.
+In case you need it, the password for the `ubuntu` user is `ubuntu`.
 
 
 License and Author
