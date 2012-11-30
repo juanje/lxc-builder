@@ -37,7 +37,7 @@ do
 done
 
 if [ -z $name ] || [ ! -d /var/lib/lxc/${name} ]; then
-  echo "You need to pass a valid name of a container"
+  echo "ERROR: You need to pass a valid name of a container"
   usage
   exit 1
 fi
