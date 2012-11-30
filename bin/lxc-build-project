@@ -291,8 +291,8 @@ create_container
 
 ensure_user
 
-install_chef
-
 install_key
+
+install_chef
 
 echo "Project ${name} has been succefully created"
