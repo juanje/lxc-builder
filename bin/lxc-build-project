@@ -66,7 +66,7 @@ EOF
   if [ $distro = "debian" ]; then
     run_command "chroot $rootfs useradd --create-home -s /bin/bash $user"
   else
-    run_command "chroot $rootfs usermod --login $user --home /home/$user --move-home --uid 1000 ubuntu"
+    run_command "chroot $rootfs usermod --login $user --home /home/$user --move-home --uid 999 ubuntu"
   fi
   echo "${user}:${user}" | chroot $rootfs chpasswd
 
