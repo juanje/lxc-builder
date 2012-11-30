@@ -58,7 +58,5 @@ fi
 username=$(< /var/lib/lxc/${name}/user)
 cp $berksfile /var/lib/lxc/${name}/rootfs/home/${username}/
 
-cmd="sudo /opt/chef/embedded/bin/berks install -b Berksfile -p /var/chef-solo/cookbooks/ ;\
-LC_ALL=C sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb $params"
-lxc-ssh -n $name -c $cmd
+lxc-ssh -n $name -c "sudo /sbin/provision $params"
 

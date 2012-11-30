@@ -113,6 +113,16 @@ EOF
 }
 EOF
   fi
+
+  provision_script="$rootfs/sbin/provision"
+  cat <<EOF > $provision_script
+#!/bin/sh
+
+params="\$@"
+/opt/chef/embedded/bin/berks install -b Berksfile -p /var/chef-solo/cookbooks/
+LC_ALL=C sudo /opt/chef/bin/chef-solo -c /etc/chef/solo.rb \$params
+EOF
+  chmod +x $provision_script
 }
 
 # Generate and inject the SSH key into the container
