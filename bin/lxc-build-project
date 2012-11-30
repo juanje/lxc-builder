@@ -39,7 +39,7 @@ run_command()
     else
       echo "Running: ${command}" >> ${logfile}
     fi
-      eval ${command} > ${logfile} 2>&1 || fail "${command}"
+      eval ${command} >> ${logfile} 2>&1 || fail "${command}"
   fi
 }
 
